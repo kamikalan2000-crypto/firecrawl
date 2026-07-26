@@ -94,4 +94,4 @@ COPY --from=go-build /app/sharedLibs/go-html-to-md/libhtml-to-markdown.so ./shar
 
 RUN node -e 'const fs = require("fs"); for (const p of ["dist/src/harness.js", "dist/src/controllers/v0/crawl-status.js", "BUILD_SHA"]) { if (!fs.statSync(p).size) throw new Error(`${p} missing or empty`); }'
 
-CMD ["node", "dist/src/harness.js", "--start-docker"]
+CMD ["node", "dist/src/index.js"]
