@@ -10,7 +10,10 @@ RUN corepack enable && corepack prepare pnpm@11.4.0 --activate
 # Build Go shared library
 FROM golang:1.24 AS go-build
 WORKDIR /app
-COPY sharedLibs/go-html-to-md ./sharedLibs/go-html-to-md
+
+# دانلود مستقیم ساب‌ماژول از گیت‌هاب برای رفع محدودیت Railway
+RUN rm -rf ./sharedLibs/go-html-to-md && \
+    git clone https://github.com/mendableai/go-html-to-md.git ./sharedLibs/go-html-to-md
 
 RUN cd sharedLibs/go-html-to-md && \
     go mod download && \
