@@ -11,8 +11,7 @@ RUN corepack enable && corepack prepare pnpm@11.4.0 --activate
 FROM golang:1.24 AS go-build
 WORKDIR /app
 
-# دانلود مستقیم ساب‌ماژول برای دور زدن محدودیت‌های Railway
-RUN git clone https://github.com/mendableai/go-html-to-md.git ./sharedLibs/go-html-to-md
+COPY apps/api/sharedLibs/go-html-to-md ./sharedLibs/go-html-to-md
 RUN cd sharedLibs/go-html-to-md && \
     go mod download && \
     go build -o libhtml-to-markdown.so -buildmode=c-shared html-to-markdown.go
@@ -43,13 +42,14 @@ ENV RUSTUP_HOME=/usr/local/rustup \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path \
     && chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/api/pnpm-lock.yaml apps/api/pnpm-workspace.yaml apps/api/package.json ./
 COPY apps/api/native ./native
+COPY apps/api/patches ./patches
 
 # نصب پیش‌نیازها بدون کش داکر (برای جلوگیری از خطای BuildKit)
 RUN pnpm install --frozen-lockfile
 
-COPY . .
+COPY apps/api/ .
 
 # Build the application
 RUN rm -rf dist && pnpm run build
