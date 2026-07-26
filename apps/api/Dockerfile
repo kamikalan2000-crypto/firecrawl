@@ -11,10 +11,8 @@ RUN corepack enable && corepack prepare pnpm@11.4.0 --activate
 FROM golang:1.24 AS go-build
 WORKDIR /app
 
-# دانلود مستقیم ساب‌ماژول از گیت‌هاب برای رفع محدودیت Railway
-RUN rm -rf ./sharedLibs/go-html-to-md && \
-    git clone https://github.com/mendableai/go-html-to-md.git ./sharedLibs/go-html-to-md
-
+# دانلود مستقیم ساب‌ماژول برای دور زدن محدودیت‌های Railway
+RUN git clone https://github.com/mendableai/go-html-to-md.git ./sharedLibs/go-html-to-md
 RUN cd sharedLibs/go-html-to-md && \
     go mod download && \
     go build -o libhtml-to-markdown.so -buildmode=c-shared html-to-markdown.go
@@ -30,8 +28,6 @@ RUN apt-get update && apt-get install -y \
     python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# FoundationDB client library (libfdb_c + headers), needed by the
-# `foundationdb` npm package at install time on arches without prebuilds
 ARG FDB_VERSION=7.3.63
 RUN ARCH=$(dpkg --print-architecture) && \
     case "$ARCH" in arm64) FDB_ARCH=aarch64 ;; *) FDB_ARCH=$ARCH ;; esac && \
@@ -47,18 +43,15 @@ ENV RUSTUP_HOME=/usr/local/rustup \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path \
     && chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-# Copy dependency inputs. The native workspace is included here because its
-# install script builds the Rust package; API TypeScript source is copied after
-# dependency install so source-only changes do not invalidate this layer.
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/api/native ./native
 
-# Install dependencies
+# نصب پیش‌نیازها بدون کش داکر (برای جلوگیری از خطای BuildKit)
 RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-# Build the application from a clean output directory.
+# Build the application
 RUN rm -rf dist && pnpm run build
 ARG GIT_SHA=unknown
 RUN test -s dist/src/harness.js && \
@@ -78,7 +71,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# FoundationDB client library (libfdb_c + fdbcli)
 ARG FDB_VERSION=7.3.63
 RUN ARCH=$(dpkg --print-architecture) && \
     case "$ARCH" in arm64) FDB_ARCH=aarch64 ;; *) FDB_ARCH=$ARCH ;; esac && \
