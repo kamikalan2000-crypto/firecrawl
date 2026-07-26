@@ -51,8 +51,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no
 # install script builds the Rust package; API TypeScript source is copied after
 # dependency install so source-only changes do not invalidate this layer.
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY patches ./patches
-COPY native ./native
+COPY apps/api/native ./native
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
