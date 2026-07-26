@@ -52,7 +52,7 @@ COPY patches ./patches
 COPY native ./native
 
 # Install dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+RUN --mount=type=cache,target=/pnpm/store \
     --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/app/native/target \
     pnpm install --frozen-lockfile
